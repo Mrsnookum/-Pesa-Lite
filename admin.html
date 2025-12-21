@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Terminal | M-Pesa Lite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex justify-center p-4">
+
+    <div id="admin-container" class="w-full max-w-2xl bg-gray-800 shadow-2xl rounded-3xl overflow-hidden border border-gray-700 flex flex-col my-4">
+        
+        <div class="bg-gray-700 p-6 text-center border-b border-gray-600">
+            <h1 class="text-2xl font-black tracking-widest text-green-500 uppercase">Master Control Terminal</h1>
+            <p class="text-gray-400 text-[10px] mt-1 uppercase tracking-tighter italic">Authorized Personnel Only</p>
+        </div>
+
+        <div id="admin-login-section" class="p-10">
+            <div class="max-w-xs mx-auto text-center">
+                <i class="fa-solid fa-shield-halved text-5xl text-gray-600 mb-6"></i>
+                <h2 class="text-xl font-bold mb-4">Identity Verification</h2>
+                <input type="password" id="admin-pin" placeholder="ENTER MASTER PIN" class="w-full bg-gray-900 border border-gray-600 p-4 rounded-xl mb-4 text-center text-2xl tracking-[1em] outline-none focus:border-green-500 transition">
+                <button onclick="authenticateAdmin()" id="auth-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-xl transition uppercase tracking-widest shadow-lg">Unlock System</button>
+            </div>
+        </div>
+
+        <div id="admin-dashboard" class="hidden flex-grow flex flex-col overflow-hidden">
+            <div class="p-6 overflow-y-auto space-y-8 pb-20">
+                
+                <div class="bg-gray-900 p-6 rounded-2xl border border-purple-500/50 shadow-inner">
+                    <h3 class="text-sm font-black text-purple-400 uppercase mb-4 flex justify-between items-center">
+                        <span><i class="fa-solid fa-file-signature mr-2"></i> Applications Manager</span>
+                        <button onclick="fetchApplications()" class="text-[10px] hover:underline uppercase font-bold text-purple-300">Sync Apps</button>
+                    </h3>
+                    <div id="apps-list-container" class="space-y-3 max-h-80 overflow-y-auto font-sans">
+                        <p class="text-center text-gray-600 italic py-4">Waiting for sync...</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-orange-500/50 shadow-inner">
+                    <h3 class="text-sm font-black text-orange-400 uppercase mb-4 flex justify-between items-center">
+                        <span><i class="fa-solid fa-hand-holding-dollar mr-2"></i> Withdrawal Requests</span>
+                        <button onclick="fetchAuditLogs()" class="text-[10px] hover:underline text-orange-300 uppercase font-bold">Refresh</button>
+                    </h3>
+                    <div id="withdraw-logs-container" class="space-y-2 max-h-40 overflow-y-auto font-mono text-[10px]">
+                        <p class="text-center text-gray-600 italic py-4">Waiting...</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-blue-700/50 shadow-inner">
+                    <h3 class="text-sm font-black text-blue-400 uppercase mb-4 flex justify-between items-center">
+                        <span><i class="fa-solid fa-list-ul mr-2"></i> Global Transaction Monitor</span>
+                        <button onclick="fetchAllTransactionLogs()" class="text-[10px] hover:underline text-blue-300 uppercase font-bold">Refresh Logs</button>
+                    </h3>
+                    <div id="global-logs-container" class="space-y-2 max-h-60 overflow-y-auto font-mono text-[11px]">
+                        <p class="text-center text-gray-600 italic py-4">Reading ledger history...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div class="bg-gray-900 p-4 rounded-xl border border-blue-500/30 font-sans">
+                        <h4 class="text-[10px] font-black text-blue-400 uppercase mb-3 text-center">Manual Wallet Funding</h4>
+                        <input type="text" id="fund-user-id" placeholder="User ID" class="w-full bg-gray-800 border border-gray-700 p-2 rounded mb-2 text-xs text-white">
+                        <input type="number" id="fund-amount" placeholder="Amount" class="w-full bg-gray-800 border border-gray-700 p-2 rounded mb-2 text-xs text-white">
+                        <button onclick="processFunding()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold py-2 rounded uppercase transition">Credit Account</button>
+                    </div>
+                    <div class="bg-gray-900 p-4 rounded-xl border border-indigo-500/30 font-sans">
+                        <h4 class="text-[10px] font-black text-indigo-400 uppercase mb-3 text-center">Manual Tier Override</h4>
+                        <input type="text" id="verify-user-id" placeholder="User ID" class="w-full bg-gray-800 border border-gray-700 p-2 rounded mb-2 text-xs text-white">
+                        <select id="verify-tier" class="w-full bg-gray-800 border border-gray-700 p-2 rounded mb-2 text-xs text-white">
+                            <option value="Basic">Basic (KES 200)</option>
+                            <option value="Pro">Pro (KES 500)</option>
+                            <option value="Premium">Premium (KES 1000)</option>
+                        </select>
+                        <button onclick="manualVerify()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold py-2 rounded uppercase transition">Unlock Tier</button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-green-900 font-sans">
+                    <h3 class="text-sm font-black text-green-500 uppercase mb-4 text-center">Broadcast New Marketplace Job</h3>
+                    <input type="text" id="job-title" placeholder="Job Title" class="w-full bg-gray-800 border border-gray-700 p-3 rounded-lg mb-3 text-sm text-white">
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <input type="text" id="job-cat" placeholder="Category" class="bg-gray-800 border border-gray-700 p-3 rounded-lg text-sm text-white">
+                        <input type="number" id="job-pay" placeholder="Pay (KES)" class="bg-gray-800 border border-gray-700 p-3 rounded-lg text-sm text-white">
+                    </div>
+                    <textarea id="job-desc" placeholder="Task Requirements & Description..." class="w-full bg-gray-800 border border-gray-700 p-3 rounded-lg text-sm h-20 mb-3 text-white"></textarea>
+                    <button onclick="postJob()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl uppercase text-xs transition">Publish Live</button>
+                </div>
+
+                <div class="border-t border-gray-700 pt-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-black text-gray-400 uppercase tracking-widest">Global User Registry</h3>
+                        <button onclick="refreshUserList()" class="text-xs text-blue-400 font-bold uppercase hover:underline">Sync Registry</button>
+                    </div>
+                    <div id="user-list-container" class="space-y-3">
+                        <p class="text-center text-gray-600 py-4 italic">Initializing...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8EZw4HwSBajva-Hw6iGnD3u4n7yU9igOwK4ooCheqSQKoLRquElsB1tEiGGjHM7Y/exec";
+        let masterPin = ""
+
+        async function authenticateAdmin() {
+            masterPin = document.getElementById('admin-pin').value;
+            const btn = document.getElementById('auth-btn');
+            if(!masterPin) return alert("PIN Required");
+            btn.innerText = "AUTHENTICATING..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminFetchUsers', adminPin: masterPin }) });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('admin-login-section').classList.add('hidden');
+                    document.getElementById('admin-dashboard').classList.remove('hidden');
+                    renderUsers(data.users);
+                    fetchApplications();
+                    fetchAuditLogs();
+                    fetchAllTransactionLogs();
+                } else { alert("Unauthorized Access"); }
+            } catch (e) { alert("Communication Error"); }
+            finally { btn.innerText = "Unlock System"; btn.disabled = false; }
+        }
+
+        // --- APPLICATIONS MANAGER FETCH ---
+        async function fetchApplications() {
+            const container = document.getElementById('apps-list-container');
+            container.innerHTML = '<p class="text-center text-purple-400 animate-pulse py-4 italic">Syncing applications...</p>';
+            try {
+                const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminFetchApps', adminPin: masterPin }) });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.apps.length === 0) { container.innerHTML = '<p class="text-center text-gray-600 py-4 italic text-xs">No pending applications.</p>'; return; }
+                    container.innerHTML = data.apps.map(app => `
+                        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 space-y-3">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-[9px] text-purple-400 font-bold uppercase tracking-widest">${app.title}</p>
+                                    <p class="font-bold text-sm text-white">${app.name}</p>
+                                    <p class="text-[9px] text-gray-500 font-mono">${app.id} | User: ${app.userId}</p>
+                                </div>
+                                <span class="text-[8px] px-2 py-1 rounded-md font-black uppercase ${app.status === 'PENDING' ? 'bg-yellow-900/30 text-yellow-500' : 'bg-green-900/30 text-green-500'}">${app.status}</span>
+                            </div>
+                            <a href="${app.portfolio}" target="_blank" class="block w-full bg-gray-900 text-indigo-400 text-center py-2 rounded-lg text-[10px] font-bold border border-indigo-500/20 hover:bg-indigo-500/10 uppercase transition">View Portfolio</a>
+                            <div class="flex gap-2 pt-1 border-t border-gray-700/50">
+                                <button onclick="updateAppStatus('${app.id}', 'APPROVED')" class="flex-1 bg-green-600/20 text-green-500 text-[9px] font-bold py-2 rounded uppercase hover:bg-green-600 hover:text-white transition">Approve</button>
+                                <button onclick="updateAppStatus('${app.id}', 'REJECTED')" class="flex-1 bg-red-600/20 text-red-500 text-[9px] font-bold py-2 rounded uppercase hover:bg-red-600 hover:text-white transition">Reject</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { container.innerHTML = "Sync Error."; }
+        }
+
+        // --- FIXED: THIS FUNCTION WAS CAUSING THE REFERENCE ERROR ---
+        async function updateAppStatus(appId, status) {
+            if(!confirm(`Mark Application ${appId} as ${status}?`)) return;
+            try {
+                const res = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ 
+                        action: 'adminUpdateApp', // Matches backend logic
+                        appId: appId, 
+                        status: status, 
+                        adminPin: masterPin 
+                    }) 
+                });
+                const data = await res.json();
+                alert(data.message);
+                if(data.success) fetchApplications(); // Instant UI sync
+            } catch (e) { alert("Network Error updating status."); }
+        }
+
+        // --- SHARED UTILITIES ---
+        async function fetchAuditLogs() {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminFetchAllLogs', adminPin: masterPin }) });
+            const data = await res.json();
+            if (data.success) {
+                const withdrawals = data.logs.filter(l => l.type === "WITHDRAWAL_REQ");
+                document.getElementById('withdraw-logs-container').innerHTML = withdrawals.map(l => `
+                    <div class="p-2 border-b border-gray-800 flex justify-between bg-black/20 text-[9px]">
+                        <span class="text-orange-400 font-bold">${l.txnId || 'REQ'}</span>
+                        <span class="text-white flex-grow px-2">Ksh ${l.amount}</span>
+                        <span class="text-blue-300 font-bold underline cursor-pointer" onclick="selectUser('${l.from}')">ID: ${l.from}</span>
+                    </div>
+                `).join('') || '<p class="text-center text-gray-600 py-4 italic">No pending requests.</p>';
+            }
+        }
+
+        async function fetchAllTransactionLogs() {
+            const container = document.getElementById('global-logs-container');
+            try {
+                const res = await fetch(WEB_APP_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify({ action: 'adminFetchAllLogs', adminPin: masterPin }) 
+                });
+                const data = await res.json();
+                if (data.success) {
+                    container.innerHTML = data.logs.map(log => `
+                        <div class="p-2 border-b border-gray-800 flex justify-between bg-gray-900 items-center">
+                            <span class="text-blue-400 font-bold w-16 truncate">${log.txnId || 'TX'}</span>
+                            <span class="text-gray-400 flex-grow px-2 text-center uppercase text-[8px]">${log.type || 'TXN'}</span>
+                            <span class="text-white font-bold">Ksh ${log.amount}</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) { container.innerHTML = '<p class="text-red-500 text-center text-xs">Logs Unavailable</p>'; }
+        }
+
+        function renderUsers(users) {
+            document.getElementById('user-list-container').innerHTML = users.map(u => `
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 flex justify-between items-center font-sans">
+                    <div>
+                        <p class="text-[9px] text-gray-500 font-mono">${u.id}</p>
+                        <p class="font-bold text-white text-sm">${u.phone}</p>
+                        <div class="flex gap-2 mt-1">
+                            <span class="text-[8px] px-2 py-0.5 rounded bg-gray-700 text-indigo-400 font-bold">${u.tier || 'NONE'}</span>
+                            <span class="text-[8px] px-2 py-0.5 rounded ${u.status === 'ACTIVE' ? 'bg-green-900/30 text-green-500' : 'bg-red-900/30 text-red-500'} font-bold">${u.status}</span>
+                        </div>
+                    </div>
+                    <button onclick="toggleUserStatus('${u.id}')" class="bg-gray-700 hover:bg-gray-600 text-[9px] font-bold px-3 py-2 rounded-lg uppercase transition-all">${u.status === 'ACTIVE' ? 'Freeze' : 'Activate'}</button>
+                </div>
+            `).join('');
+        }
+
+        async function processFunding() {
+            const userId = document.getElementById('fund-user-id').value;
+            const amount = document.getElementById('fund-amount').value;
+            if(!userId || !amount) return alert("Fields Required");
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCredit', userId, amount, adminPin: masterPin }) });
+            const data = await res.json();
+            alert(data.message);
+            if(data.success) fetchAllTransactionLogs();
+        }
+
+        async function manualVerify() {
+            const userId = document.getElementById('verify-user-id').value;
+            const tier = document.getElementById('verify-tier').value;
+            if(!userId) return alert("User ID Required");
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'verifyPaystack', reference: "MANUAL_" + Date.now(), userId, tier }) });
+            const data = await res.json();
+            alert(data.message);
+            if(data.success) refreshUserList();
+        }
+
+        async function postJob() {
+            const title = document.getElementById('job-title').value;
+            const cat = document.getElementById('job-cat').value;
+            const pay = document.getElementById('job-pay').value;
+            const desc = document.getElementById('job-desc').value;
+            if(!title || !pay) return alert("Job Title and Payout Required");
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminPostJob', title, cat, pay, desc, adminPin: masterPin }) });
+            const data = await res.json();
+            alert(data.message);
+            if(data.success) {
+                document.getElementById('job-title').value = "";
+                document.getElementById('job-desc').value = "";
+            }
+        }
+
+        async function refreshUserList() {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminFetchUsers', adminPin: masterPin }) });
+            const data = await res.json();
+            if(data.success) renderUsers(data.users);
+        }
+
+        async function toggleUserStatus(userId) {
+            const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'adminToggleUserStatus', targetUserId: userId, adminPin: masterPin }) });
+            const result = await res.json();
+            if(result.success) refreshUserList();
+        }
+
+        function selectUser(id) {
+            document.getElementById('fund-user-id').value = id;
+            document.getElementById('verify-user-id').value = id;
+            document.getElementById('fund-user-id').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

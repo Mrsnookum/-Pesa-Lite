@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submit Application | M-Jobs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
+
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+        <div class="bg-indigo-700 p-6 text-white text-center">
+            <h2 class="text-xl font-black uppercase tracking-tight" id="job-display-title">Job Application</h2>
+            <p class="text-xs opacity-80 mt-1">Fill in your details to apply</p>
+        </div>
+
+        <form id="app-form" class="p-8 space-y-5">
+            <div>
+                <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Full Name</label>
+                <input type="text" id="user-name" required class="w-full border-2 border-slate-100 p-3 rounded-xl outline-none focus:border-indigo-500 transition-colors text-sm font-semibold">
+            </div>
+
+            <div>
+                <label class="text-[10px] font-bold uppercase text-slate-400 ml-1">Portfolio / Resume Link</label>
+                <input type="url" id="user-portfolio" placeholder="https://..." required class="w-full border-2 border-slate-100 p-3 rounded-xl outline-none focus:border-indigo-500 transition-colors text-sm">
+            </div>
+
+            <div class="pt-4">
+                <button type="submit" id="submit-btn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold uppercase tracking-widest shadow-lg active:scale-95 transition-transform">Submit Application</button>
+                <button type="button" onclick="window.location.href='jobs.html'" class="w-full mt-3 text-slate-400 text-[10px] font-bold uppercase tracking-widest hover:text-slate-600">Cancel</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Use your provided Script URL
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbySl44Vp-2MxX2-lCzombvax1WSPNfcgpehQURkegIqhvGa_HNKx9EXxSBAR4qRBTQ/exec";
+        
+        const params = new URLSearchParams(window.location.search);
+        const jobId = params.get('jobId');
+        const jobTitle = params.get('title');
+
+        document.getElementById('job-display-title').innerText = jobTitle || "Apply for Task";
+
+        document.getElementById('app-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            
+            // Retrieve data from localStorage
+            const userId = localStorage.getItem('activeUserId');
+            const userEmail = localStorage.getItem('userEmail');
+
+            if (!userId) {
+                alert("Session expired. Please login again.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "SUBMITTING...";
+
+            try {
+                const res = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'submitApplication', // Matches backend switch case
+                        userId: userId,
+                        jobId: jobId,
+                        jobTitle: jobTitle,
+                        userName: document.getElementById('user-name').value, // Matches App Sheet Col E
+                        userEmail: userEmail, // Matches App Sheet Col F
+                        portfolio: document.getElementById('user-portfolio').value // Matches App Sheet Col G
+                    })
+                });
+                
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("Application Submitted Successfully!");
+                    window.location.href = 'jobs.html';
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (err) { 
+                alert("Connection error. Please try again."); 
+                console.error(err);
+            } finally { 
+                btn.disabled = false; 
+                btn.innerText = "Submit Application"; 
+            }
+        };
+    </script>
+</body>
+</html>

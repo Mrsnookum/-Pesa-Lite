@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>M-Jobs | Dev & Design Marketplace</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+
+    <style>
+        .tier-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #e2e8f0; }
+        .tier-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .job-card { border-left: 4px solid #4f46e5; transition: transform 0.2s ease; }
+        .job-card:active { transform: scale(0.98); }
+        ::-webkit-scrollbar { display: none; }
+        body { 
+            -webkit-tap-highlight-color: transparent; 
+            background-color: #f8fafc;
+        }
+        .nav-shadow { box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="min-h-screen font-sans select-none">
+
+    <nav class="bg-indigo-700 p-4 text-white flex justify-between items-center sticky top-0 z-50 nav-shadow">
+        <div class="flex items-center gap-3">
+            <button onclick="window.location.href='index.html'" class="p-2 hover:bg-indigo-600 rounded-full transition">
+                <i class="fa-solid fa-arrow-left text-lg"></i>
+            </button>
+            <h1 class="text-xl font-black italic tracking-tighter uppercase">M-JOBS</h1>
+        </div>
+        <div id="user-badge" class="hidden bg-indigo-900/50 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border border-indigo-400">
+            Guest
+        </div>
+    </nav>
+
+    <div id="main-content" class="max-w-md mx-auto p-4 pb-24">
+        
+        <div id="paywall-section" class="hidden space-y-6 pt-4">
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight text-indigo-600">ACTIVATE PORTAL</h2>
+                <p class="text-slate-500 text-sm mt-1">Unlock your freelance marketplace access.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div class="tier-card bg-white p-6 rounded-3xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 uppercase">Bronze Pack</h3>
+                            <p class="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Apply for 5 Jobs</p>
+                        </div>
+                        <div class="text-right"><span class="text-2xl font-black text-slate-900">Ksh 200</span></div>
+                    </div>
+                    <button onclick="payWithPaystack('Basic', 200)" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg active:scale-95 transition">Activate Bronze</button>
+                </div>
+
+                <div class="tier-card bg-indigo-50 p-6 rounded-3xl border-2 border-indigo-500 relative">
+                    <div class="absolute top-0 right-0 bg-indigo-500 text-white text-[8px] font-black px-4 py-1 uppercase rounded-bl-xl">Popular</div>
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 uppercase">Silver Pack</h3>
+                            <p class="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Apply for 15 Jobs</p>
+                        </div>
+                        <div class="text-right"><span class="text-2xl font-black text-slate-900">Ksh 500</span></div>
+                    </div>
+                    <button onclick="payWithPaystack('Pro', 500)" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg active:scale-95 transition">Activate Silver</button>
+                </div>
+
+                <div class="tier-card bg-white p-6 rounded-3xl">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800 uppercase">Gold Pack</h3>
+                            <p class="text-[10px] text-purple-600 font-bold uppercase tracking-wider">Unlimited Job Access</p>
+                        </div>
+                        <div class="text-right"><span class="text-2xl font-black text-slate-900">Ksh 1,000</span></div>
+                    </div>
+                    <button onclick="payWithPaystack('Premium', 1000)" class="w-full bg-purple-600 text-white py-4 rounded-2xl font-bold text-sm uppercase tracking-widest shadow-lg active:scale-95 transition">Activate Gold</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="job-feed-section" class="hidden space-y-5">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter">Live Marketplace</h2>
+                <span id="remaining-count" class="text-[10px] font-bold bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full uppercase">Jobs Left: 0</span>
+            </div>
+            <div id="job-list-container" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <div id="bottom-nav" class="hidden fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-200 p-4 flex justify-around items-center max-w-md mx-auto z-40">
+        <button onclick="openWithdrawModal()" class="flex flex-col items-center text-indigo-600 hover:text-indigo-800 transition">
+            <i class="fa-solid fa-money-bill-transfer text-2xl"></i>
+            <span class="text-[10px] font-bold uppercase mt-1">Withdraw</span>
+        </button>
+        <button onclick="location.reload()" class="flex flex-col items-center text-slate-400 hover:text-slate-600 transition">
+            <i class="fa-solid fa-rotate text-2xl"></i>
+            <span class="text-[10px] font-bold uppercase mt-1">Refresh</span>
+        </button>
+    </div>
+
+    <script>
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwdrKK0Inuh_5T0dm7ibHJ4QB24T2bpQpRtCGHRV2Z5wvl-P273Hh5hn3r4UTc2HiI/exec";
+        const userId = localStorage.getItem('activeUserId');
+
+        window.onload = () => {
+            if (!userId) return window.location.href = 'index.html';
+            checkAccess();
+        };
+
+        async function checkAccess() {
+            try {
+                const res = await fetch(`${WEB_APP_URL}?action=getBalance&userId=${userId}`);
+                const d = await res.json();
+                
+                const paywall = document.getElementById('paywall-section');
+                const feed = document.getElementById('job-feed-section');
+                const nav = document.getElementById('bottom-nav');
+                const badge = document.getElementById('user-badge');
+
+                if (d.tier && d.tier !== "NONE") {
+                    paywall.classList.add('hidden');
+                    feed.classList.remove('hidden');
+                    nav.classList.remove('hidden');
+                    badge.classList.remove('hidden');
+                    badge.innerText = d.tier;
+                    document.getElementById('remaining-count').innerText = `Jobs Left: ${d.limit}`;
+                    loadJobs();
+                } else {
+                    paywall.classList.remove('hidden');
+                    feed.classList.add('hidden');
+                }
+            } catch (e) { console.error("Access check failed"); }
+        }
+
+        function payWithPaystack(tier, amount) {
+            const userEmail = localStorage.getItem('userEmail') || `${userId}@mpesa-lite.com`;
+
+            const handler = PaystackPop.setup({
+                key: 'pk_live_ce8a56dfe0839cdc30d4cb6ed08f2635d89d7584',
+                email: userEmail,
+                amount: amount * 100, 
+                currency: "KES",
+                channels: ["mobile_money"],
+                callback: (res) => verifyPayment(res.reference, tier)
+            });
+            handler.openIframe();
+        }
+
+        async function verifyPayment(ref, tier) {
+            const res = await fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({ action: "verifyPaystack", reference: ref, userId: userId, tier: tier })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Portal Activated! Welcome to ${tier} status.`);
+                checkAccess();
+            } else {
+                alert("Verification Error. Contact Support.");
+            }
+        }
+
+        async function loadJobs() {
+            const container = document.getElementById('job-list-container');
+            container.innerHTML = '<div class="text-center py-10 animate-pulse text-indigo-600">Loading Marketplace...</div>';
+            
+            try {
+                const res = await fetch(`${WEB_APP_URL}?action=getJobs&userId=${userId}`);
+                const jobs = await res.json();
+                
+                if (!jobs || jobs.length === 0) {
+                    container.innerHTML = `<div class="text-center p-10 opacity-40 font-bold uppercase">No New Tasks Today</div>`;
+                    return;
+                }
+
+                container.innerHTML = jobs.map(j => `
+                    <div class="job-card bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-black text-slate-800 uppercase tracking-tight text-sm">${j.title}</h3>
+                            <span class="bg-indigo-100 text-indigo-700 text-[8px] font-black px-2 py-1 rounded-md uppercase">${j.category}</span>
+                        </div>
+                        <p class="text-[12px] text-slate-500 mb-5 leading-relaxed">${j.description}</p>
+                        <div class="flex justify-between items-center border-t border-slate-50 pt-4">
+                            <span class="text-lg font-black text-indigo-600 tracking-tighter">Ksh ${j.payout}</span>
+                            <button onclick="window.location.href='application.html?jobId=${j.id}&title=${encodeURIComponent(j.title)}'" 
+                                    class="bg-indigo-600 text-white px-6 py-2 rounded-xl font-bold text-[11px] uppercase shadow-md active:scale-90 transition">
+                                Apply
+                            </button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) { container.innerHTML = "Error loading tasks."; }
+        }
+    </script>
+</body>
+</html>

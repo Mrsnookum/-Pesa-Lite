@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Tasks | M-Pesa Lite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-slate-100 min-h-screen pb-20 font-sans">
+
+    <nav class="bg-green-600 p-6 text-white flex items-center gap-4 sticky top-0 z-50 shadow-lg">
+        <button onclick="window.location.href='index.html'" class="w-10 h-10 flex items-center justify-center bg-white/20 hover:bg-white/30 rounded-full transition">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <div>
+            <h1 class="text-xl font-black uppercase tracking-tight leading-none">My Task Board</h1>
+            <p class="text-[9px] text-green-100 uppercase tracking-widest mt-1 font-bold">Secure Work Portal</p>
+        </div>
+    </nav>
+
+    <div class="max-w-md mx-auto p-4 space-y-6">
+        
+        <div class="bg-white rounded-3xl p-6 border-l-8 border-green-500 shadow-sm">
+            <h3 class="font-black text-xs text-gray-800 uppercase mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-green-600"></i> Submission Guide
+            </h3>
+            <ul class="text-[11px] space-y-3 text-gray-600 font-bold uppercase tracking-tight">
+                <li class="flex gap-3">
+                    <span class="bg-green-100 text-green-700 w-5 h-5 rounded-full flex items-center justify-center shrink-0">1</span>
+                    <span>Finish the approved task.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="bg-green-100 text-green-700 w-5 h-5 rounded-full flex items-center justify-center shrink-0">2</span>
+                    <span>Upload proof to Drive/GitHub.</span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="bg-green-100 text-green-700 w-5 h-5 rounded-full flex items-center justify-center shrink-0">3</span>
+                    <span>Email link to: <b class="text-green-600">techonly03@gmail.com</b></span>
+                </li>
+                <li class="flex gap-3">
+                    <span class="bg-green-100 text-green-700 w-5 h-5 rounded-full flex items-center justify-center shrink-0">4</span>
+                    <span>Wallet credited after admin check.</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Job Application History</h2>
+            <div id="tasks-container" class="space-y-3">
+                <div class="bg-white p-10 rounded-3xl text-center border border-slate-200">
+                    <div class="inline-block animate-spin mb-3 text-green-600">
+                        <i class="fa-solid fa-circle-notch text-2xl"></i>
+                    </div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fetching tasks...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Use the Script URL provided in Code.gs
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxkNlZlKaXmkSXK2_yDsaez8OufOayOWmVBmjDQRuzgZLPsbFD1YWgGVC3yk7kDmEQ/exec";
+        const userId = localStorage.getItem('activeUserId');
+
+        window.onload = () => {
+            if (!userId) {
+                alert("Session expired. Please login.");
+                window.location.href = 'index.html';
+                return;
+            }
+            fetchMyTasks();
+        };
+
+        async function fetchMyTasks() {
+            const container = document.getElementById('tasks-container');
+            try {
+                // FIXED: Using URLSearchParams to ensure the action is handled by doGet
+                const res = await fetch(`${WEB_APP_URL}?action=getUserApplications&userId=${userId}`);
+                const data = await res.json();
+
+                if (data.success && data.apps.length > 0) {
+                    container.innerHTML = data.apps.map(app => {
+                        const isApproved = app.status === 'APPROVED';
+                        const isRejected = app.status === 'REJECTED';
+                        
+                        const statusClass = isApproved ? 'bg-green-100 text-green-700 border-green-200' : 
+                                            isRejected ? 'bg-red-100 text-red-700 border-red-200' : 
+                                            'bg-amber-100 text-amber-700 border-amber-200';
+                        
+                        return `
+                        <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex justify-between items-center transition-all active:scale-95">
+                            <div>
+                                <p class="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">${app.id}</p>
+                                <h4 class="font-black text-slate-800 text-sm uppercase leading-tight">${app.title}</h4>
+                                <p class="text-[9px] text-slate-500 font-bold mt-1">Applied: ${new Date(app.timestamp).toLocaleDateString()}</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[9px] px-3 py-1.5 rounded-full font-black border uppercase ${statusClass}">
+                                    ${app.status}
+                                </span>
+                                ${isApproved ? `
+                                <div class="mt-2 text-green-600 animate-pulse">
+                                    <i class="fa-solid fa-circle-check text-xs"></i>
+                                    <span class="text-[8px] font-black uppercase ml-1">Submit Work</span>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = `
+                    <div class="bg-white p-12 rounded-3xl text-center border border-slate-200 opacity-60">
+                        <i class="fa-solid fa-folder-open text-3xl text-slate-300 mb-3"></i>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">No Applied Tasks Found</p>
+                    </div>`;
+                }
+            } catch (e) { 
+                container.innerHTML = `
+                <div class="bg-red-50 p-6 rounded-3xl border border-red-100 text-center">
+                    <p class="text-red-600 text-[10px] font-black uppercase">Sync Error: Database unreachable.</p>
+                </div>`; 
+            }
+        }
+    </script>
+</body>
+</html>
