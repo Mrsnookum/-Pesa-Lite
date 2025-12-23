@@ -77,6 +77,39 @@
                     </div>
                 </div>
 
+<div class="bg-gray-900 p-4 rounded-xl border border-indigo-500/30 font-sans">
+    <h4 class="text-[10px] font-black text-indigo-400 uppercase mb-3 text-center">Referral/Tier Manual Verify</h4>
+    <input type="text" id="verify-user-id" placeholder="User ID" class="w-full bg-gray-800 border border-gray-700 p-2 rounded mb-2 text-xs text-white">
+    <select id="verify-tier" class="w-full bg-gray-800 border border-gray-700 p-2 rounded mb-2 text-xs text-white">
+        <option value="Basic">Basic (KES 150)</option>
+        <option value="Pro">Pro (KES 500)</option>
+        <option value="Premium">Premium (KES 1000)</option>
+    </select>
+    <button onclick="manualVerifyReferral()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold py-2 rounded uppercase transition">Activate Referral Manually</button>
+</div>
+                     
+
+                <div class="bg-gray-900 p-6 rounded-2xl border border-emerald-500/50 shadow-inner mb-8">
+    <h3 class="text-sm font-black text-emerald-400 uppercase mb-4 flex justify-between items-center">
+        <span><i class="fa-solid fa-chart-line mr-2"></i> Financial Intelligence</span>
+        <button onclick="fetchAdminStats()" class="text-[10px] hover:underline uppercase font-bold text-emerald-300">Update Stats</button>
+    </h3>
+    <div class="grid grid-cols-2 gap-4">
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <p class="text-[9px] text-gray-500 uppercase font-black">Total MGMT Profit</p>
+            <p id="stat-mgmt-profit" class="text-xl font-black text-emerald-500 italic">Ksh 0.00</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <p class="text-[9px] text-gray-500 uppercase font-black">Active User Base</p>
+            <p id="stat-total-users" class="text-xl font-black text-blue-400 italic">0</p>
+        </div>
+        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 col-span-2">
+            <p class="text-[9px] text-gray-500 uppercase font-black">Pending Payout Liability</p>
+            <p id="stat-pending-payouts" class="text-lg font-black text-orange-400 italic">Ksh 0.00</p>
+        </div>
+    </div>
+</div>
+
                 <div class="bg-gray-900 p-6 rounded-2xl border border-green-900 font-sans">
                     <h3 class="text-sm font-black text-green-500 uppercase mb-4 text-center">Broadcast New Marketplace Job</h3>
                     <input type="text" id="job-title" placeholder="Job Title" class="w-full bg-gray-800 border border-gray-700 p-3 rounded-lg mb-3 text-sm text-white">
@@ -102,7 +135,7 @@
     </div>
 
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz8EZw4HwSBajva-Hw6iGnD3u4n7yU9igOwK4ooCheqSQKoLRquElsB1tEiGGjHM7Y/exec";
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxuPPfRh6nkTchSqgB3iOXF-ksZJDY3-dlw5QarjirYh4Pwkk94xOd-kt7pRW5Son4/exec";
         let masterPin = ""
 
         async function authenticateAdmin() {
@@ -273,6 +306,51 @@
             const result = await res.json();
             if(result.success) refreshUserList();
         }
+
+
+
+        // --- NEW: FETCH FINANCIAL STATS ---
+async function fetchAdminStats() {
+    try {
+        const res = await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ action: 'adminFetchStats', adminPin: masterPin }) 
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('stat-mgmt-profit').innerText = `Ksh ${data.mgmtProfit.toFixed(2)}`;
+            document.getElementById('stat-total-users').innerText = data.totalUsers;
+            document.getElementById('stat-pending-payouts').innerText = `Ksh ${data.pendingPayouts.toFixed(2)}`;
+        }
+    } catch (e) { console.error("Stats Sync Error"); }
+}
+
+// --- NEW: MANUAL REFERRAL ACTIVATION ---
+async function manualVerifyReferral() {
+    const userId = document.getElementById('verify-user-id').value;
+    const tier = document.getElementById('verify-tier').value;
+    if(!userId) return alert("User ID Required");
+    
+    if(!confirm(`Manually activate ${tier} for ${userId}? This will distribute commissions to uplines.`)) return;
+
+    try {
+        const res = await fetch(WEB_APP_URL, { 
+            method: 'POST', 
+            body: JSON.stringify({ 
+                action: 'activateReferral', 
+                userId: userId, 
+                tier: tier, 
+                reference: "MANUAL_BY_ADMIN_" + Date.now() 
+            }) 
+        });
+        const data = await res.json();
+        alert(data.message);
+        if(data.success) {
+            refreshUserList();
+            fetchAdminStats();
+        }
+    } catch (e) { alert("Activation Error"); }
+}
 
         function selectUser(id) {
             document.getElementById('fund-user-id').value = id;
