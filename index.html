@@ -132,7 +132,7 @@
 
         <footer class="bg-slate-900 py-6 px-6 text-center shrink-0 border-t border-slate-800 mt-auto">
             <p class="text-[9px] font-black text-white uppercase tracking-[0.3em]">M-PESA <span class="font-light opacity-60">Lite</span></p>
-            <p class="text-[8px] text-slate-500 uppercase tracking-widest font-bold mt-1">&copy; 2025 M-Pesa Lite. All Rights Reserved.</p>
+            <p class="text-[8px] text-slate-500 uppercase tracking-widest font-bold mt-1">&copy; 2026 M-Pesa Lite. All Rights Reserved.</p>
         </footer>
     </div>
 
@@ -175,7 +175,7 @@
                 origin: { y: 0.6 }
             });
 
-            // Redirect to referral.html after a small delay
+            // Redirect to referral.html after celebration
             setTimeout(() => {
                 window.location.href = 'referral.html';
             }, 1200);
@@ -204,15 +204,14 @@
                     loadDashboard(data);
                     
                     // NEW YEAR GIVEAWAY TRIGGER
-                   // --- Find this section inside fetchDashboard ---
-                const today = new Date();
-                const month = today.getMonth() + 1;
-                const date = today.getDate();
+                    const today = new Date();
+                    const month = today.getMonth() + 1;
+                    const date = today.getDate();
 
-                   // Updated logic: Show if it's December 31st OR January 1st to 5th
-             if (data.isNewUser && ( (month === 12 && date === 31) || (month === 1 && date <= 5) )) {
-             document.getElementById('new-year-modal').classList.remove('hidden');
-             }
+                    // Logic: Show if it's December 31st OR January 1st to 5th
+                    if (data.isNewUser && ((month === 12 && date === 31) || (month === 1 && date <= 5))) {
+                        document.getElementById('new-year-modal').classList.remove('hidden');
+                    }
 
                 } else {
                     logout();
